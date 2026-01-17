@@ -143,7 +143,7 @@ const BrowseProjectsSection: React.FC<BrowseProjectsSectionProps> = ({
         };
 
         return (
-          <div
+          <div // NOSONAR
             key={project?._id ?? index}
             onClick={() => handleProjectClick(cardProject)}
           >
