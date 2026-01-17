@@ -96,6 +96,8 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
   const contactSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
+  const messageInputAreaRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const otherUserTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasProcessedBusinessIdRef = useRef<string | null>(null);
@@ -971,12 +973,20 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
 
   // Set chat background image CSS variable
   useEffect(() => {
-    if (messagesContainerRef.current && chat_bg_image?.src) {
+    if (chat_bg_image?.src) {
       const bgImage = `linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url(${chat_bg_image.src})`;
-      messagesContainerRef.current.style.setProperty(
-        "--chat-bg-image",
-        bgImage
-      );
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.style.setProperty(
+          "--chat-bg-image",
+          bgImage
+        );
+      }
+      if (messageInputAreaRef.current) {
+        messageInputAreaRef.current.style.setProperty(
+          "--chat-bg-image",
+          bgImage
+        );
+      }
     }
   }, [showChatView]);
 
@@ -1802,6 +1812,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
 
       {/* Right Panel - Chat Window */}
       <div
+        ref={chatWindowRef}
         className={`flex-1 flex flex-col bg-white md:rounded-[16px] min-h-0 relative ${
           showChatView ? "flex" : "hidden lg:flex"
         }`}
@@ -2092,9 +2103,12 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
             )}
 
             {/* Message Input Area */}
-            <div className="bg-graySoft bg-opacity-10 px-[10px] xxs:px-[20px] xs:px-[40px] md:px-[32px] xl:px-[42px] py-[12px] border-solid border-0 border-t border-graySoft border-opacity-50">
-              <div className="flex items-center justify-between gap-[6px] sm:gap-[8px] lg:gap-[10px]">
-                <div className="flex items-center flex-1 min-w-0">
+            <div 
+              ref={messageInputAreaRef}
+              className="chat-background px-[10px] xxs:px-[20px] xs:px-[40px] md:px-[32px] xl:px-[42px] py-[8px] sm:py-[10px]"
+            >
+              <div className="flex items-center gap-[6px] sm:gap-[8px]">
+                <div className="flex items-center flex-1 min-w-0 shadow-md bg-white rounded-[20px] sm:rounded-[24px] px-[12px] sm:px-[16px] py-[8px] sm:py-[10px]">
                   <BaseInput
                     type="text"
                     placeholder={t("chatPageConstants.writeMessage")}
@@ -2102,12 +2116,9 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
                     onChange={handleInputChange}
                     onKeyDown={handleKeyPress}
                     disabled={!isConnected || sendingMessage || uploadingImage}
-                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-graySoft border-opacity-50 rounded-[8px] text-textBase text-obsidianBlack placeholder-stoneGray ring-0 min-w-0"
+                    className="flex-1 bg-transparent border-none px-0 py-0 text-textBase text-obsidianBlack placeholder-stoneGray ring-0 min-w-0 focus:ring-0 focus:outline-none"
                     fullWidth
                   />
-                </div>
-
-                <div className="flex items-center gap-[8px] sm:gap-[16px] lg:gap-[24px] flex-shrink-0">
                   <BaseFileUpload
                     name="chat-file-upload"
                     accept="*/*"
@@ -2117,7 +2128,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
                     showEditButton={false}
                     uploadPlaceholder={
                       <BaseButton
-                        className="border-none bg-transparent p-1 sm:p-0"
+                        className="border-none bg-transparent p-1 flex-shrink-0"
                         startIcon={
                           <AttachmentIcon className="text-obsidianBlack w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]" />
                         }
@@ -2126,24 +2137,23 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
                     containerClassName="w-auto h-auto"
                     className="w-auto h-auto"
                   />
-                  <div>
-                    <BaseButton
-                      onClick={handleSendMessage}
-                      disabled={
-                        !messageText.trim() ||
-                        !isConnected ||
-                        sendingMessage ||
-                        uploadingImage
-                      }
-                      className="px-[10px] sm:px-[14px] lg:px-[22px] py-[8px] sm:py-[9px] lg:py-[10px] gap-[6px] sm:gap-[8px] bg-deepTeal text-white rounded-[6px] sm:rounded-[8px] flex items-center justify-center border-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <span className="hidden lg:inline">
-                        {t("chatPageConstants.send")}
-                      </span>
-                      <SendIcon className="text-white w-[14px] h-[14px] sm:w-[16px] sm:h-[16px]" />
-                    </BaseButton>
-                  </div>
                 </div>
+
+                <BaseButton
+                  onClick={handleSendMessage}
+                  disabled={
+                    !messageText.trim() ||
+                    !isConnected ||
+                    sendingMessage ||
+                    uploadingImage
+                  }
+                  className="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] lg:w-auto lg:h-auto lg:px-[14px] lg:py-[10px] lg:gap-[6px] rounded-full lg:rounded-[24px] bg-deepTeal text-white flex items-center justify-center border-none disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 p-0"
+                >
+                  <span className="hidden lg:inline text-textBase">
+                    {t("chatPageConstants.send")}
+                  </span>
+                  <SendIcon className="text-white w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]" />
+                </BaseButton>
               </div>
             </div>
           </>
