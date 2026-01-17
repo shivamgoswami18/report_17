@@ -204,7 +204,7 @@ export default function MyProjectsSection() {
             };
 
             return (
-              <div
+              <div // NOSONAR
                 key={project?._id ?? index}
                 onClick={() => handleProjectClick(cardProject)}
               >

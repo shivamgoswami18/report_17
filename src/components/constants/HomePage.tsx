@@ -31,21 +31,22 @@ export interface CustomerServiceItem {
 }
 
 export interface SocialMediaItem {
+  id: string;
   href: string;
 }
 
 export const customerServiceIcons: ReactElement[] = [
-  <ClockIcon />,
-  <EnvelopeIcon />,
-  <PhoneIcon />,
+  <ClockIcon key="clock" />,
+  <EnvelopeIcon key="envelope" />,
+  <PhoneIcon key="phone" />,
 ];
 
 export const socialMediaIcons: ReactElement[] = [
-  <FacebookIcon />,
-  <LinkedInIcon />,
-  <XTwitterIcon />,
-  <YouTubeIcon />,
-  <InstagramIcon />,
+  <FacebookIcon key="facebook" />,
+  <LinkedInIcon key="linkedin" />,
+  <XTwitterIcon key="twitter" />,
+  <YouTubeIcon key="youtube" />,
+  <InstagramIcon key="instagram" />,
 ];
 
 export const footerConstants = {
@@ -103,21 +104,11 @@ export const footerConstants = {
     { label: "Innstillinger for informasjonskapsler", href: "#" },
   ] as FooterLink[],
   socialMedia: [
-    {
-      href: "#",
-    },
-    {
-      href: "#",
-    },
-    {
-      href: "#",
-    },
-    {
-      href: "#",
-    },
-    {
-      href: "#",
-    },
+    { id: "facebook", href: "#" },
+    { id: "instagram", href: "#" },
+    { id: "twitter", href: "#" },
+    { id: "linkedin", href: "#" },
+    { id: "youtube", href: "#" },
   ] as SocialMediaItem[],
   copyright: `© ${new Date().getFullYear()}. Alle rettigheter forbeholdt.`,
   logo: "LOGO",

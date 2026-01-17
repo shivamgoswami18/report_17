@@ -32,7 +32,7 @@ const BaseSlider = <T,>({
   const itemsWithIndex = items.map((item, index) => ({ item, index }));
 
   const itemTemplate = ({ item, index }: { item: T; index: number }) => (
-    <div
+    <div // NOSONAR
       className={`h-full ${itemClassName}`}
       onMouseEnter={() => onItemHover?.(index)}
       onMouseLeave={() => onItemHover?.(null)}

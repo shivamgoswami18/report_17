@@ -4,12 +4,12 @@ import React from "react";
 import { TabView, TabPanel } from "primereact/tabview";
 
 interface BaseTabsProps {
-  tabs: string[];
-  activeIndex: number;
-  onChange: (index: number, label: string) => void;
-  className?: string;
-  tabHeaderIcons?: React.ReactNode[];
-  tabClassName?: string;
+  readonly tabs: readonly string[];
+  readonly activeIndex: number;
+  readonly onChange: (index: number, label: string) => void;
+  readonly className?: string;
+  readonly tabHeaderIcons?: readonly React.ReactNode[];
+  readonly tabClassName?: string;
 }
 
 export default function BaseTabs({
@@ -40,7 +40,7 @@ export default function BaseTabs({
       >
         {tabs?.map((tab, index) => (
           <TabPanel
-            key={index}
+            key={tab}
             header={tabHeaderTemplate(tab, index)}
           ></TabPanel>
         ))}
