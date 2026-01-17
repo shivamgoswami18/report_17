@@ -8,6 +8,7 @@ import {
   SendIcon,
   BackArrowIcon,
   CloseIcon,
+  ChevronDownIcon,
 } from "@/assets/icons/CommonIcons";
 import user_image from "@/assets/images/user_dummy_image.png";
 import chat_bg_image from "@/assets/images/chat_bg_image.jpg";
@@ -90,10 +91,13 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
   const [isContactSearchVisible, setIsContactSearchVisible] =
     useState<boolean>(false);
   const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState<boolean>(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contactSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const chatWindowRef = useRef<HTMLDivElement>(null);
+  const messageInputAreaRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const otherUserTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasProcessedBusinessIdRef = useRef<string | null>(null);
@@ -129,8 +133,9 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
       const initialHeight = container.scrollHeight;
       lastScrollHeightRef.current = initialHeight;
 
-      // Reduced retry delays for smoother experience - fewer attempts, better timing
-      const retryDelays = [100, 300, 600, 1000, 1500, 2000];
+      // Extended retry delays to handle slow image loading and content rendering
+      // Increased to 6+ seconds to ensure all content loads before stopping scroll
+      const retryDelays = [100, 300, 600, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000];
 
       const doInstantScroll = () => {
         if (messagesContainerRef.current) {
@@ -502,15 +507,15 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
       setAllMessages(uiMessages);
 
       // Keep loading state until scroll completes - wait for DOM to render, then scroll instantly
-      // Delay to allow images to start loading before scrolling
+      // Increased delay to allow more time for images to start loading before scrolling
       setTimeout(() => {
         scrollToBottom(true);
         // After scroll completes, hide loading
-        // Give extra time for images to load before hiding loader
+        // Give extra time for images to load before hiding loader - significantly increased delay for better UX
         setTimeout(() => {
           setLoading(false);
-        }, 200);
-      }, 100);
+        }, 1500);
+      }, 500);
     },
     [
       convertSocketMessageToUIMessage,
@@ -900,6 +905,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
       // Reset search when switching chats
       setIsSearchMode(false);
       setSearchQuery("");
+      setShowScrollToBottom(false);
 
       // Clear typing timeouts when switching chats
       clearAllTimeouts();
@@ -918,6 +924,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
       setLoading(false);
       setIsSearchMode(false);
       setSearchQuery("");
+      setShowScrollToBottom(false);
 
       // Clear typing timeouts
       clearAllTimeouts();
@@ -966,14 +973,132 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
 
   // Set chat background image CSS variable
   useEffect(() => {
-    if (messagesContainerRef.current && chat_bg_image?.src) {
+    if (chat_bg_image?.src) {
       const bgImage = `linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url(${chat_bg_image.src})`;
-      messagesContainerRef.current.style.setProperty(
-        "--chat-bg-image",
-        bgImage
-      );
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.style.setProperty(
+          "--chat-bg-image",
+          bgImage
+        );
+      }
+      if (messageInputAreaRef.current) {
+        messageInputAreaRef.current.style.setProperty(
+          "--chat-bg-image",
+          bgImage
+        );
+      }
     }
   }, [showChatView]);
+
+  // Handle scroll detection for scroll-to-bottom button
+  useEffect(() => {
+    if (!showChatView) {
+      setShowScrollToBottom(false);
+      return;
+    }
+
+    const container = messagesContainerRef.current;
+    
+    if (!container) {
+      setShowScrollToBottom(false);
+      return;
+    }
+
+    const checkScrollPosition = () => {
+      if (!container) {
+        setShowScrollToBottom(false);
+        return;
+      }
+      
+      // Don't show button if loading or no messages
+      if (loading || messages.length === 0) {
+        setShowScrollToBottom(false);
+        return;
+      }
+      
+      const scrollHeight = container.scrollHeight;
+      const scrollTop = container.scrollTop;
+      const clientHeight = container.clientHeight;
+      
+      // Check if container is scrollable (has overflow)
+      const isScrollable = scrollHeight > clientHeight;
+      
+      if (!isScrollable) {
+        setShowScrollToBottom(false);
+        return;
+      }
+      
+      // Check if user is at bottom (within 50px threshold for better UX)
+      const threshold = 50;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      const atBottom = distanceFromBottom <= threshold;
+      
+      setShowScrollToBottom(!atBottom);
+    };
+
+    // Use passive listener for better performance
+    container.addEventListener("scroll", checkScrollPosition, { passive: true });
+    
+    // Check initial state with delays to handle async rendering
+    const timeouts: NodeJS.Timeout[] = [];
+    [100, 300, 500, 800].forEach((delay) => {
+      timeouts.push(setTimeout(checkScrollPosition, delay));
+    });
+    
+    // Also check when container resizes
+    const resizeObserver = new ResizeObserver(() => {
+      setTimeout(checkScrollPosition, 50);
+    });
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener("scroll", checkScrollPosition);
+      timeouts.forEach(clearTimeout);
+      resizeObserver.disconnect();
+    };
+  }, [showChatView, loading, messages.length, selectedChatId]);
+
+  // Update scroll button visibility when messages change or after scroll completes
+  useEffect(() => {
+    if (!messagesContainerRef.current || !showChatView) {
+      return;
+    }
+
+    const container = messagesContainerRef.current;
+    
+    const checkScrollPosition = () => {
+      if (!container || loading || messages.length === 0) {
+        setShowScrollToBottom(false);
+        return;
+      }
+      
+      const scrollHeight = container.scrollHeight;
+      const scrollTop = container.scrollTop;
+      const clientHeight = container.clientHeight;
+      
+      const isScrollable = scrollHeight > clientHeight;
+      if (!isScrollable) {
+        setShowScrollToBottom(false);
+        return;
+      }
+      
+      const threshold = 50;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      const atBottom = distanceFromBottom <= threshold;
+      
+      setShowScrollToBottom(!atBottom);
+    };
+
+    // Check multiple times to catch DOM updates
+    const timeouts: NodeJS.Timeout[] = [];
+    [100, 300, 500, 1000].forEach((delay) => {
+      timeouts.push(setTimeout(checkScrollPosition, delay));
+    });
+    
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [messages, showChatView, loading, selectedChatId]);
 
   // Handle image loading - re-scroll when images load (ResizeObserver detects size changes)
   useEffect(() => {
@@ -1030,10 +1155,10 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
         // Immediate smooth scroll
         performScroll();
 
-        // Single debounced retry for layout stabilization
+        // Single debounced retry for layout stabilization - significantly increased delay for better stability
         scrollTimeoutId = setTimeout(
           () => handleDelayedScroll(lastMessage),
-          150
+          500
         );
       }
 
@@ -1064,6 +1189,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
     setLoading(false);
     setIsSearchMode(false);
     setSearchQuery("");
+    setShowScrollToBottom(false);
 
     // Clear typing timeouts
     if (otherUserTypingTimeoutRef.current) {
@@ -1620,7 +1746,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
         <div
           className={`border-solid border-t md:border-t-0 border-0 border-b border-graySoft border-opacity-50 px-[10px] xxs:px-[20px] xs:px-[40px] md:px-[20px] ${
             isContactSearchVisible
-              ? "py-[2px] sm:py-[7px] md:py-[11px]"
+              ? "py-[4px] sm:py-[9px] md:py-[13px]"
               : "py-[12px] sm:py-[16px] md:py-[20px]"
           }`}
         >
@@ -1645,7 +1771,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
                   placeholder={t("chatPageConstants.searchContacts")}
                   value={contactSearchQuery}
                   onChange={handleContactSearchChange}
-                  className="w-full px-3 sm:px-4 py-2 border border-graySoft border-opacity-50 rounded-[8px] text-textBase text-obsidianBlack placeholder-stoneGray ring-0"
+                  className="w-full px-3 sm:px-4 py-2 border border-graySoft border-opacity-50 rounded-full text-textBase text-obsidianBlack placeholder-stoneGray ring-0"
                 />
                 {contactSearchQuery && (
                   <BaseButton
@@ -1686,7 +1812,8 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
 
       {/* Right Panel - Chat Window */}
       <div
-        className={`flex-1 flex flex-col bg-white md:rounded-[16px] min-h-0 ${
+        ref={chatWindowRef}
+        className={`flex-1 flex flex-col bg-white md:rounded-[16px] min-h-0 relative ${
           showChatView ? "flex" : "hidden lg:flex"
         }`}
       >
@@ -1702,7 +1829,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
             <div
               className={`flex items-center justify-between border-solid border-t md:border-t-0 border-0 border-b border-graySoft border-opacity-50 px-[10px] xxs:px-[20px] xs:px-[40px] md:px-[32px] xl:px-[42px] ${
                 isSearchMode
-                  ? "py-[7px] sm:py-[10.5px] md:py-[10.5px]"
+                  ? "py-[7px] sm:py-[10.5px] md:py-[13px]"
                   : "py-[10px] sm:py-[12px]"
               }`}
             >
@@ -1722,7 +1849,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
                       placeholder={t("chatPageConstants.searchMessages")}
                       value={searchQuery}
                       onChange={handleSearchChange}
-                      className="w-full px-3 sm:px-4 py-2 border border-graySoft border-opacity-50 rounded-[8px] text-textBase text-obsidianBlack placeholder-stoneGray ring-0"
+                      className="w-full px-3 sm:px-4 py-2 border border-graySoft border-opacity-50 rounded-full text-textBase text-obsidianBlack placeholder-stoneGray ring-0"
                     />
                     {searchQuery && (
                       <BaseButton
@@ -1962,11 +2089,26 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
                 )}
               </div>
             </div>
+            
+            {/* Scroll to Bottom Button - Overlaps messages */}
+            {showScrollToBottom && (
+              <div className="absolute bottom-[80px] sm:bottom-[90px] right-[16px] sm:right-[24px] md:right-[32px] xl:right-[42px] z-[9999] pointer-events-auto">
+                <BaseButton
+                  onClick={() => scrollToBottom(true)}
+                  className="w-[40px] h-[40px] sm:w-[44px] sm:h-[44px] rounded-full bg-graySoft text-white shadow-2xl hover:bg-opacity-90 hover:scale-105 transition-all flex items-center justify-center border-none p-0 cursor-pointer"
+                >
+                  <ChevronDownIcon className="text-white w-[20px] h-[20px] sm:w-[22px] sm:h-[22px]" />
+                </BaseButton>
+              </div>
+            )}
 
             {/* Message Input Area */}
-            <div className="bg-graySoft bg-opacity-10 px-[10px] xxs:px-[20px] xs:px-[40px] md:px-[32px] xl:px-[42px] py-[12px] border-solid border-0 border-t border-graySoft border-opacity-50">
-              <div className="flex items-center justify-between gap-[6px] sm:gap-[8px] lg:gap-[10px]">
-                <div className="flex items-center flex-1 min-w-0">
+            <div 
+              ref={messageInputAreaRef}
+              className="chat-background px-[10px] xxs:px-[20px] xs:px-[40px] md:px-[32px] xl:px-[42px] py-[8px] sm:py-[10px]"
+            >
+              <div className="flex items-center gap-[6px] sm:gap-[8px]">
+                <div className="flex items-center flex-1 min-w-0 shadow-md bg-white rounded-[20px] sm:rounded-[24px] px-[12px] sm:px-[16px] py-[8px] sm:py-[10px]">
                   <BaseInput
                     type="text"
                     placeholder={t("chatPageConstants.writeMessage")}
@@ -1974,12 +2116,9 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
                     onChange={handleInputChange}
                     onKeyDown={handleKeyPress}
                     disabled={!isConnected || sendingMessage || uploadingImage}
-                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-graySoft border-opacity-50 rounded-[8px] text-textBase text-obsidianBlack placeholder-stoneGray ring-0 min-w-0"
+                    className="flex-1 bg-transparent border-none px-0 py-0 text-textBase text-obsidianBlack placeholder-stoneGray ring-0 min-w-0 focus:ring-0 focus:outline-none"
                     fullWidth
                   />
-                </div>
-
-                <div className="flex items-center gap-[8px] sm:gap-[16px] lg:gap-[24px] flex-shrink-0">
                   <BaseFileUpload
                     name="chat-file-upload"
                     accept="*/*"
@@ -1989,7 +2128,7 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
                     showEditButton={false}
                     uploadPlaceholder={
                       <BaseButton
-                        className="border-none bg-transparent p-1 sm:p-0"
+                        className="border-none bg-transparent p-1 flex-shrink-0"
                         startIcon={
                           <AttachmentIcon className="text-obsidianBlack w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]" />
                         }
@@ -1998,24 +2137,23 @@ export default function Messages() { // NOSONAR – Complex UI state handling, r
                     containerClassName="w-auto h-auto"
                     className="w-auto h-auto"
                   />
-                  <div>
-                    <BaseButton
-                      onClick={handleSendMessage}
-                      disabled={
-                        !messageText.trim() ||
-                        !isConnected ||
-                        sendingMessage ||
-                        uploadingImage
-                      }
-                      className="px-[10px] sm:px-[14px] lg:px-[22px] py-[8px] sm:py-[9px] lg:py-[10px] gap-[6px] sm:gap-[8px] bg-deepTeal text-white rounded-[6px] sm:rounded-[8px] flex items-center justify-center border-none disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <span className="hidden lg:inline">
-                        {t("chatPageConstants.send")}
-                      </span>
-                      <SendIcon className="text-white w-[14px] h-[14px] sm:w-[16px] sm:h-[16px]" />
-                    </BaseButton>
-                  </div>
                 </div>
+
+                <BaseButton
+                  onClick={handleSendMessage}
+                  disabled={
+                    !messageText.trim() ||
+                    !isConnected ||
+                    sendingMessage ||
+                    uploadingImage
+                  }
+                  className="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] lg:w-auto lg:h-auto lg:px-[14px] lg:py-[10px] lg:gap-[6px] rounded-full lg:rounded-[24px] bg-deepTeal text-white flex items-center justify-center border-none disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 p-0"
+                >
+                  <span className="hidden lg:inline text-textBase">
+                    {t("chatPageConstants.send")}
+                  </span>
+                  <SendIcon className="text-white w-[18px] h-[18px] sm:w-[20px] sm:h-[20px]" />
+                </BaseButton>
               </div>
             </div>
           </>
