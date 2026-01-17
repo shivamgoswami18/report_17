@@ -104,9 +104,9 @@ const WhyUseOurPlatformSection = () => {
           </p>
 
           <div className="flex flex-wrap gap-y-[16px] mb-[48px]">
-            {features?.map((feature, index) => (
+            {features?.map((feature) => (
               <div
-                key={index}
+                key={feature}
                 className="w-full sm:w-1/2 flex items-center gap-[10px]"
               >
                 <div className="flex justify-center items-center w-[30px] h-[30px] bg-deepTeal rounded-full">

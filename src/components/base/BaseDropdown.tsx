@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Dropdown, DropdownChangeEvent } from "primereact/dropdown";
 
 interface BaseDropdownProps {
@@ -21,6 +21,30 @@ interface BaseDropdownProps {
   options: { value: string; label: string }[];
   endIcon?: React.ReactNode;
 }
+
+// Template functions moved outside component to avoid recreation on every render
+const renderItemTemplate = (option: { value: string; label: string }) => (
+  <div className="px-[14px] py-[2px]">
+    <span className="text-obsidianBlack text-textBase font-light xl:leading-[20px] xl:tracking-[0%]">
+      {option.label}
+    </span>
+  </div>
+);
+
+const createValueTemplate = (placeholder?: string) => (option: { value: string; label: string } | null) => {
+  if (option) {
+    return (
+      <span className="text-obsidianBlack text-textBase font-light xl:leading-[20px] xl:tracking-[0%]">
+        {option.label}
+      </span>
+    );
+  }
+  return (
+    <span className="text-obsidianBlack text-opacity-30 text-textSm font-light xl:leading-[20px] xl:tracking-[0%]">
+      {placeholder}
+    </span>
+  );
+};
 
 const BaseDropdown: React.FC<BaseDropdownProps> = ({
   className,
@@ -45,6 +69,11 @@ const BaseDropdown: React.FC<BaseDropdownProps> = ({
   const handleChange = (e: DropdownChangeEvent) => {
     onChange?.(e.value);
   };
+
+  const valueTemplate = useMemo(
+    () => createValueTemplate(placeholder),
+    [placeholder]
+  );
 
   return (
     <div className={`${fullWidth ? "w-full" : ""} text-start`}>
@@ -79,27 +108,8 @@ const BaseDropdown: React.FC<BaseDropdownProps> = ({
             icon ? "pl-[38px]" : "pl-[14px]"
           } pr-[38px] [&.p-focus]:ring-0 [&.p-focus]:outline-none [&.p-focus]:border-lightGrayGamma [&.p-focus]:shadow-none`}
           panelClassName="!border-lightGrayGamma !rounded-[8px] !shadow-lg"
-          itemTemplate={(option) => (
-            <div className="px-[14px] py-[2px]">
-              <span className="text-obsidianBlack text-textBase font-light xl:leading-[20px] xl:tracking-[0%]">
-                {option.label}
-              </span>
-            </div>
-          )}
-          valueTemplate={(option) => {
-            if (option) {
-              return (
-                <span className="text-obsidianBlack text-textBase font-light xl:leading-[20px] xl:tracking-[0%]">
-                  {option.label}
-                </span>
-              );
-            }
-            return (
-              <span className="text-obsidianBlack text-opacity-30 text-textSm font-light xl:leading-[20px] xl:tracking-[0%]">
-                {placeholder}
-              </span>
-            );
-          }}
+          itemTemplate={renderItemTemplate}
+          valueTemplate={valueTemplate}
           pt={{
             root: {
               className: `font-light text-textBase text-obsidianBlack rounded-[8px] py-[12px] border border-lightGrayGamma focus:ring-0 focus:outline-none focus:border-lightGrayGamma focus:shadow-none ${

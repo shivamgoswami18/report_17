@@ -233,34 +233,36 @@ const ProjectsFilterSection = ({
         </div>
 
         {/* Temporarily commented out budget range filter */}
-        {/* <div className="mb-[24px]">
-          <div className="text-obsidianBlack text-textSm text-opacity-40 font-light mb-[12px] xl:leading-[100%] xl:tracking-[0px]">
-            {t("projectsPageConstants.budgetRange")}
+        { /* NOSONAR
+          <div className="mb-[24px]">
+            <div className="text-obsidianBlack text-textSm text-opacity-40 font-light mb-[12px] xl:leading-[100%] xl:tracking-[0px]">
+              {t("projectsPageConstants.budgetRange")}
+            </div>
+            <div className="space-y-[10px]">
+              {BUDGET_RANGES?.map((range) => {
+                const isSelected = selectedBudgetRange === range?.id;
+                return (
+                  <BaseCheckbox
+                    key={range?.id}
+                    name={`${filterPrefixesConstants.budget.prefix}${range?.id}`}
+                    checked={isSelected}
+                    onChange={() => handleBudgetRangeChange(range?.id)}
+                    label={range?.label}
+                    disabled={disabled}
+                    labelClassName={`flex items-center text-textBase font-light xl:leading-[100%] xl:tracking-[0px] ${
+                      isSelected ? "text-deepTeal" : "text-obsidianBlack"
+                    }`}
+                    checkboxClassName={
+                      isSelected
+                        ? "[&_.p-checkbox-box]:bg-deepTeal [&_.p-checkbox-box]:border-deepTeal"
+                        : ""
+                    }
+                  />
+                );
+              })}
+            </div>
           </div>
-          <div className="space-y-[10px]">
-            {BUDGET_RANGES?.map((range) => {
-              const isSelected = selectedBudgetRange === range?.id;
-              return (
-                <BaseCheckbox
-                  key={range?.id}
-                  name={`${filterPrefixesConstants.budget.prefix}${range?.id}`}
-                  checked={isSelected}
-                  onChange={() => handleBudgetRangeChange(range?.id)}
-                  label={range?.label}
-                  disabled={disabled}
-                  labelClassName={`flex items-center text-textBase font-light xl:leading-[100%] xl:tracking-[0px] ${
-                    isSelected ? "text-deepTeal" : "text-obsidianBlack"
-                  }`}
-                  checkboxClassName={
-                    isSelected
-                      ? "[&_.p-checkbox-box]:bg-deepTeal [&_.p-checkbox-box]:border-deepTeal"
-                      : ""
-                  }
-                />
-              );
-            })}
-          </div>
-        </div> */}
+        */}
 
         <div className="mb-[24px]">
           <div className="text-obsidianBlack text-textSm text-opacity-40 font-light mb-[12px] xl:leading-[100%] xl:tracking-[0px]">

@@ -15,14 +15,14 @@ const HomeFooter = () => {
     <footer className="w-full bg-obsidianBlack text-white">
       <div className="w-full mx-auto max-w-container px-[20px] py-[40px] xs:px-[32px] md:px-[64px] desktop:px-[120px] md:py-[56px]">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[28px] md:gap-[40px] lg:gap-[56px]">
-          {footerColumns?.map((column, columnIndex) => (
-            <div key={columnIndex} className="flex flex-col">
+          {footerColumns?.map((column) => (
+            <div key={column?.title} className="flex flex-col">
               <h3 className="text-textBase font-extraLight text-white text-opacity-50 mb-[16px] uppercase xl:leading-[100%] tracking-[0px]">
                 {column?.title}
               </h3>
               <ul className="flex flex-col gap-[8px] list-none marker:none">
-                {column?.links?.map((link, linkIndex) => (
-                  <li key={linkIndex}>
+                {column?.links?.map((link) => (
+                  <li key={link?.label}>
                     <Link
                       href={link?.href}
                       className="text-textBase text-white hover:text-stoneGray transition-colors xl:leading-[32px] tracking-[0px] no-underline"
@@ -41,7 +41,7 @@ const HomeFooter = () => {
             </h3>
             <ul className="flex flex-col gap-[12px]">
               {customerServiceItems?.map((item, index) => (
-                <li key={index} className="flex items-start gap-[10px]">
+                <li key={item?.text} className="flex items-start gap-[10px]">
                   {customerServiceIcons?.[index]}
                   {item?.isLink && item?.href ? (
                     <a
@@ -77,7 +77,7 @@ const HomeFooter = () => {
 
           <div className="flex flex-wrap items-center justify-center">
             {legalLinks?.map((link, index) => (
-              <div key={index} className="flex items-center">
+              <div key={link?.label} className="flex items-center">
                 <Link
                   href={link?.href}
                   className="text-textSm text-white text-opacity-50 font-extraLight xl:leading-[100%] tracking-[0px] hover:text-white transition-colors no-underline"
@@ -96,7 +96,7 @@ const HomeFooter = () => {
           <div className="flex items-center gap-[12px]">
             {socialMediaItems?.map((item, index) => (
               <Link
-                key={index}
+                key={item?.id}
                 href={item?.href}
                 className="text-white hover:text-opacity-50 transition-colors flex items-center justify-center no-underline"
               >

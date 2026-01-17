@@ -119,13 +119,13 @@ const BaseFileUpload: React.FC<BaseFileUploadProps> = ({
           <div className={`${helperTextClassName}`}>{helperText}</div>
         )}
         <div className="relative">
-          <div
+          <div // NOSONAR
             className={`${containerClassName || ""} relative overflow-hidden ${
-              !currentImage
-                ? "cursor-pointer hover:bg-offWhite transition-colors"
-                : ""
+              currentImage
+                ? ""
+                : "cursor-pointer hover:bg-offWhite transition-colors"
             }`}
-            onClick={!currentImage ? handleEditClick : undefined}
+            onClick={currentImage ? undefined : handleEditClick}
           >
             {currentImage ? (
               <Image

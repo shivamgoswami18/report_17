@@ -65,7 +65,7 @@ const BaseAccordion = ({
   };
         return (
           <div
-            key={index}
+            key={item?.question}
             className={`rounded-[16px] bg-white border transition-all duration-300 ${
               isExpanded
                 ? "bg-white border-0 shadow-[0px_0px_32px_0px_#108A001A]"

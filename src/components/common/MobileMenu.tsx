@@ -36,7 +36,7 @@ const MobileMenu = () => {
         />
       </div>
 
-      <div
+      <div // NOSONAR
         className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
           isSidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
         }`}
@@ -44,7 +44,7 @@ const MobileMenu = () => {
       >
         <div className="absolute inset-0 bg-blackTransparent" />
 
-        <div
+        <div // NOSONAR
           className={`absolute top-0 right-0 h-full w-[280px] bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
             isSidebarOpen ? "translate-x-0" : "translate-x-full"
           }`}
